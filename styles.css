@@ -128,8 +128,7 @@ main {
 .question {
   width: 100%;
   max-width: 1100px;
-  height: 320px;          /* 문제 영역 높이 고정 */
-  flex: 0 0 320px;        /* 늘어나거나 줄어들지 않음 → 나머지는 카드가 사용 */
+  flex: 0 0 auto;         /* 세로 모드: 내용에 맞는 가변 높이 */
   overflow: hidden;
   background: #ffffff;
   border-radius: clamp(28px, 4vmin, 48px);
@@ -314,6 +313,12 @@ main {
   }
 
   .levels { flex-wrap: nowrap; }
+
+  /* 가로 모드: 문제 영역 높이 320px 고정 → 나머지는 카드가 사용 */
+  .question {
+    height: 320px;
+    flex: 0 0 320px;
+  }
 
   /* 문제: 높이 차지를 줄여서 카드가 커지도록 */
   .q-emoji { font-size: min(20vh, 26vw); }
