@@ -35,8 +35,8 @@ function svgEmoji(el) {
   });
 }
 
-// 한 칸(box) 안의 요소들(els)이 가로/세로로 넘치면, 모두 같은 비율로 줄여서
-// 칸 안에 쏙 들어가게 맞춤 (글자도 그림(이모지)도 안 깨지게)
+// 한 칸(box)의 패딩 안쪽 영역에 모든 내용이 들어가도록, els의 폰트를 줄여 맞춤
+// (그림(이모지)과 글자 모두, box 안의 모든 자식이 패딩 안에 들어오게 함)
 function fitStack(box, els) {
   if (!box) return;
   els = els.filter(Boolean);
@@ -46,19 +46,29 @@ function fitStack(box, els) {
   els.forEach((e) => (e.style.fontSize = ""));
 
   const cs = getComputedStyle(box);
-  const maxW =
-    box.clientWidth - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight);
+  const padL = parseFloat(cs.paddingLeft);
+  const padR = parseFloat(cs.paddingRight);
+  const padT = parseFloat(cs.paddingTop);
+  const padB = parseFloat(cs.paddingBottom);
+  const maxW = box.clientWidth - padL - padR;   // 패딩 제외한 가로
+  const maxH = box.clientHeight - padT - padB;  // 패딩 제외한 세로
 
   let sizes = els.map((e) => parseFloat(getComputedStyle(e).fontSize));
   let guard = 0;
 
-  while (guard++ < 80) {
-    const tooWide = els.some((e) => e.scrollWidth > maxW + 1);
-    const tooTall = box.scrollHeight > box.clientHeight + 1;
-    if (!tooWide && !tooTall) break;
+  while (guard++ < 100) {
+    const kids = Array.from(box.children);
+    // 실제로 차지하는 내용 높이(맨 위 자식 top ~ 맨 아래 자식 bottom)
+    const top = Math.min(...kids.map((k) => k.getBoundingClientRect().top));
+    const bottom = Math.max(...kids.map((k) => k.getBoundingClientRect().bottom));
+    const usedH = bottom - top;
+
+    const tooTall = usedH > maxH + 0.5;
+    const tooWide = els.some((e) => e.scrollWidth > maxW + 0.5);
+    if (!tooTall && !tooWide) break;
     if (sizes.every((s) => s <= 12)) break;
 
-    sizes = sizes.map((s) => Math.max(12, s * 0.94));
+    sizes = sizes.map((s) => Math.max(12, s * 0.95));
     els.forEach((e, i) => (e.style.fontSize = sizes[i] + "px"));
   }
 }
