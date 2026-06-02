@@ -35,30 +35,45 @@ function svgEmoji(el) {
   });
 }
 
-// 글자가 칸을 넘치면 들어갈 때까지 폰트를 줄임 (두/세 글자도 안 깨지게)
-function fitWord(el, box) {
-  if (!el || !box) return;
-  el.style.fontSize = "";                       // 먼저 CSS 기본 크기로 리셋
-  let size = parseFloat(getComputedStyle(el).fontSize);
+// 한 칸(box) 안의 요소들(els)이 가로/세로로 넘치면, 모두 같은 비율로 줄여서
+// 칸 안에 쏙 들어가게 맞춤 (글자도 그림(이모지)도 안 깨지게)
+function fitStack(box, els) {
+  if (!box) return;
+  els = els.filter(Boolean);
+  if (!els.length) return;
+
+  // 먼저 CSS 기본 크기로 리셋
+  els.forEach((e) => (e.style.fontSize = ""));
+
+  const cs = getComputedStyle(box);
+  const maxW =
+    box.clientWidth - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight);
+
+  let sizes = els.map((e) => parseFloat(getComputedStyle(e).fontSize));
   let guard = 0;
-  while (
-    guard++ < 60 &&
-    size > 14 &&
-    (el.scrollWidth > el.clientWidth + 1 ||      // 가로로 넘침
-      el.scrollHeight > box.clientHeight * 0.9)  // 세로로 넘침
-  ) {
-    size *= 0.92;
-    el.style.fontSize = size + "px";
+
+  while (guard++ < 80) {
+    const tooWide = els.some((e) => e.scrollWidth > maxW + 1);
+    const tooTall = box.scrollHeight > box.clientHeight + 1;
+    if (!tooWide && !tooTall) break;
+    if (sizes.every((s) => s <= 12)) break;
+
+    sizes = sizes.map((s) => Math.max(12, s * 0.94));
+    els.forEach((e, i) => (e.style.fontSize = sizes[i] + "px"));
   }
 }
 
-// 현재 화면의 모든 단어 글자를 칸에 맞춰 조정
+// 현재 화면의 문제/카드 내용을 각 칸에 맞춰 조정
 function fitAll() {
-  const qWord = $question.querySelector(".q-word");
-  if (qWord) fitWord(qWord, $question);
+  // 문제: 이모지 + 글자를 함께 줄여 420px 칸 안에 맞춤
+  fitStack($question, [
+    $question.querySelector(".q-emoji"),
+    $question.querySelector(".q-word"),
+  ]);
+
+  // 보기 카드: 카드마다 글자(또는 그림)를 카드 안에 맞춤
   $cards.querySelectorAll(".card").forEach((card) => {
-    const w = card.querySelector(".c-word");
-    if (w) fitWord(w, card);
+    fitStack(card, [card.firstElementChild]);
   });
 }
 

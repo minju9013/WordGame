@@ -128,13 +128,15 @@ main {
 .question {
   width: 100%;
   max-width: 1100px;
+  height: 420px;          /* 문제 영역 높이 고정 */
+  flex: 0 0 420px;        /* 늘어나거나 줄어들지 않음 → 나머지는 카드가 사용 */
+  overflow: hidden;
   background: #ffffff;
   border-radius: clamp(28px, 4vmin, 48px);
   padding: clamp(16px, 2.4vmin, 36px) clamp(16px, 3vmin, 40px);
   text-align: center;
   box-shadow: var(--card-shadow);
   border: 6px solid #fff0a6;
-  flex: 0 0 auto;
   display: flex;
   flex-direction: column;
   align-items: center;
