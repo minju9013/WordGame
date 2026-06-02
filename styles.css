@@ -42,6 +42,9 @@ body {
   overflow: hidden;
   color: #5b4a63;
   padding: clamp(14px, 2.4vmin, 40px);
+  /* 노치 / 다이내믹 아일랜드 / 홈 인디케이터 안전 영역 보정 */
+  padding-top: max(clamp(14px, 2.4vmin, 40px), env(safe-area-inset-top));
+  padding-bottom: max(clamp(14px, 2.4vmin, 40px), env(safe-area-inset-bottom));
   gap: clamp(8px, 1.6vmin, 22px);
 }
 
@@ -128,7 +131,8 @@ main {
 .question {
   width: 100%;
   max-width: 1100px;
-  flex: 0 0 auto;         /* 세로 모드: 내용에 맞는 가변 높이 */
+  flex: 4 1 0;            /* 세로 모드: 카드와 4:6 비율로 공간 분배 (화면 크기에 맞춰 가변) */
+  min-height: 0;
   overflow: hidden;
   background: #ffffff;
   border-radius: clamp(28px, 4vmin, 48px);
@@ -173,7 +177,7 @@ main {
   gap: clamp(20px, 4vmin, 60px);
   width: 100%;
   max-width: 1100px;
-  flex: 1 1 auto;
+  flex: 6 1 0;            /* 세로 모드: 남는 공간의 더 큰 몫을 카드가 사용 */
   min-height: 0;
 }
 
@@ -341,4 +345,22 @@ main {
     min-height: 0;
     margin: 0;
   }
+}
+
+/* ============================================================
+   좁은 세로 화면(아이폰 등) 최적화
+   - 제목/버튼/메시지를 컴팩트하게 → 보기 카드 공간 확보
+   ============================================================ */
+@media (orientation: portrait) and (max-width: 540px) {
+  body { gap: 8px; }
+
+  h1 { font-size: 26px; margin-bottom: 8px; }
+
+  .levels { gap: 8px; }
+  .level-btn { font-size: 19px; padding: 8px 14px; border-radius: 18px; }
+
+  .message { font-size: 34px; min-height: 40px; }
+
+  .nav-btn { font-size: 26px; padding: 12px 28px; }
+  .controls { gap: 14px; }
 }
