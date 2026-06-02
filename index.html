@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <title>한글 단어 맞추기</title>
+
+  <!-- 귀여운 한글 폰트 -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Jua&display=swap" rel="stylesheet" />
+
+  <!-- 스타일시트 -->
+  <link rel="stylesheet" href="styles.css" />
+
+  <!-- canvas confetti 라이브러리 -->
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
+
+  <!-- Twemoji: 이모지를 SVG 이미지로 렌더링 (기기와 무관하게 동일/안 깨짐) -->
+  <script src="https://cdn.jsdelivr.net/npm/twemoji@14.0.2/dist/twemoji.min.js" crossorigin="anonymous"></script>
+
+  <!-- 게임 데이터 & 로직 (defer: HTML 파싱 후 실행) -->
+  <script src="data.js" defer></script>
+  <script src="game.js" defer></script>
+</head>
+<body>
+  <header>
+    <h1> 한글 단어 맞추기 </h1>
+
+    <div class="levels" id="levels">
+      <button class="level-btn active" data-level="1">🖼️ 그림＋글자</button>
+      <button class="level-btn" data-level="2">🐻 그림만</button>
+      <button class="level-btn" data-level="3">🔤 글자만</button>
+    </div>
+  </header>
+
+  <main>
+    <div class="play">
+      <div class="question" id="question"></div>
+      <div class="cards" id="cards"></div>
+    </div>
+
+    <div class="footer">
+      <div class="message" id="message"></div>
+      <div class="controls">
+        <button class="nav-btn" id="prevBtn">◀ 이전</button>
+        <button class="nav-btn next-btn" id="nextBtn">다음 ▶</button>
+      </div>
+    </div>
+  </main>
+</body>
+</html>

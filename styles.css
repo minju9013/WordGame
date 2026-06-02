@@ -1,0 +1,337 @@
+:root {
+  --pink: #ff9ec4;
+  --yellow: #ffe066;
+  --mint: #8be0c8;
+  --blue: #8ec5ff;
+  --purple: #c9a7ff;
+  --card-shadow: 0 10px 0 rgba(0, 0, 0, 0.12);
+}
+
+* {
+  box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+}
+
+/* Twemoji(SVG) 이모지: 글자 크기에 맞춰 자동 확대, 기기 상관없이 동일하게 표시 */
+img.emoji {
+  height: 1em;
+  width: 1em;
+  margin: 0 0.05em;
+  vertical-align: -0.12em;
+  display: inline-block;
+  -webkit-user-drag: none;
+  pointer-events: none;
+}
+
+html, body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  font-family: "Jua", "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
+}
+
+body {
+  height: 100vh;
+  height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background: linear-gradient(160deg, #fff1f8 0%, #fef9e7 45%, #e8fbff 100%);
+  background-attachment: fixed;
+  overflow: hidden;
+  color: #5b4a63;
+  padding: clamp(14px, 2.4vmin, 40px);
+  gap: clamp(8px, 1.6vmin, 22px);
+}
+
+/* ---------- 상단 영역 ---------- */
+header {
+  width: 100%;
+  max-width: 1200px;
+  text-align: center;
+  flex: 0 0 auto;
+}
+
+h1 {
+  font-size: clamp(30px, 4.4vmin, 60px);
+  margin: 0 0 clamp(10px, 1.8vmin, 22px);
+  color: #ff6fa5;
+  text-shadow: 2px 2px 0 #fff;
+}
+
+/* 난이도 선택 버튼 */
+.levels {
+  display: flex;
+  justify-content: center;
+  gap: clamp(8px, 1.6vmin, 18px);
+  flex-wrap: wrap;
+}
+
+.level-btn {
+  font-family: inherit;
+  font-size: clamp(20px, 2.6vmin, 34px);
+  padding: clamp(10px, 1.5vmin, 18px) clamp(16px, 2.6vmin, 34px);
+  border: none;
+  border-radius: 26px;
+  background: #ffffff;
+  color: #9a7bb5;
+  box-shadow: 0 5px 0 rgba(0, 0, 0, 0.08);
+  cursor: pointer;
+  transition: transform 0.08s ease;
+}
+
+.level-btn.active {
+  background: var(--purple);
+  color: #fff;
+  box-shadow: 0 5px 0 #9a78d6;
+}
+
+.level-btn:active {
+  transform: translateY(3px);
+}
+
+/* ---------- 가운데 게임 영역 ---------- */
+main {
+  width: 100%;
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: clamp(8px, 1.6vmin, 20px);
+}
+
+/* 문제 + 보기 카드 묶음 (세로 모드: 위/아래, 가로 모드: 좌/우) */
+.play {
+  width: 100%;
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: clamp(10px, 2vmin, 28px);
+}
+
+/* 메시지 + 이전/다음 버튼 묶음 */
+.footer {
+  width: 100%;
+  flex: 0 0 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: clamp(8px, 1.4vmin, 16px);
+}
+
+/* ---------- 문제 영역 ---------- */
+.question {
+  width: 100%;
+  max-width: 1100px;
+  background: #ffffff;
+  border-radius: clamp(28px, 4vmin, 48px);
+  padding: clamp(16px, 2.4vmin, 36px) clamp(16px, 3vmin, 40px);
+  text-align: center;
+  box-shadow: var(--card-shadow);
+  border: 6px solid #fff0a6;
+  flex: 0 0 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.q-emoji {
+  font-size: clamp(110px, 22vmin, 260px);
+  line-height: 1.05;
+  cursor: pointer;
+}
+
+.q-word {
+  font-size: clamp(84px, 15vmin, 200px);
+  font-weight: bold;
+  color: #6b4ea0;
+  margin-top: 6px;
+  cursor: pointer;
+  max-width: 100%;
+  white-space: nowrap;
+  line-height: 1.05;
+}
+
+.q-hint {
+  font-size: clamp(22px, 2.8vmin, 40px);
+  color: #b09bc4;
+  margin-top: clamp(6px, 1.2vmin, 14px);
+}
+
+/* ---------- 보기 카드 ---------- */
+.cards {
+  display: flex;
+  justify-content: center;
+  align-items: stretch;
+  gap: clamp(20px, 4vmin, 60px);
+  width: 100%;
+  max-width: 1100px;
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
+.card {
+  flex: 1 1 0;
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+  border: none;
+  border-radius: clamp(28px, 4vmin, 48px);
+  background: #fff;
+  box-shadow: var(--card-shadow);
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: clamp(14px, 2.4vmin, 30px) clamp(8px, 1.6vmin, 20px);
+  transition: transform 0.1s ease;
+  font-family: inherit;
+}
+
+.card:nth-child(1) { border-bottom: 12px solid var(--pink); }
+.card:nth-child(2) { border-bottom: 12px solid var(--blue); }
+
+.card:active { transform: scale(0.96); }
+
+.card .c-emoji { font-size: clamp(90px, 20vmin, 240px); line-height: 1; }
+.card .c-word {
+  font-size: clamp(72px, 16vmin, 210px);
+  font-weight: bold;
+  color: #4a4a6a;
+  display: block;
+  max-width: 100%;
+  white-space: nowrap;
+  line-height: 1.05;
+}
+
+.card.correct {
+  animation: pop 0.5s ease;
+  border-bottom-color: var(--mint) !important;
+  background: #f0fff8;
+}
+
+.card.wrong {
+  animation: shake 0.5s ease;
+  background: #fff4f4;
+}
+
+@keyframes pop {
+  0% { transform: scale(1); }
+  40% { transform: scale(1.12); }
+  100% { transform: scale(1); }
+}
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  20% { transform: translateX(-10px); }
+  40% { transform: translateX(10px); }
+  60% { transform: translateX(-8px); }
+  80% { transform: translateX(8px); }
+}
+
+/* ---------- 메시지 ---------- */
+.message {
+  font-size: clamp(40px, 4.6vmin, 72px);
+  min-height: clamp(50px, 6vmin, 84px);
+  text-align: center;
+  color: #ff7eb0;
+  flex: 0 0 auto;
+}
+
+.message.gentle { color: #7aa7e0; }
+
+/* 이전 / 다음 버튼 */
+.controls {
+  display: flex;
+  gap: clamp(16px, 3vmin, 44px);
+  justify-content: center;
+  flex-wrap: wrap;
+  flex: 0 0 auto;
+}
+
+.nav-btn {
+  font-family: inherit;
+  font-size: clamp(28px, 3.2vmin, 46px);
+  padding: clamp(14px, 2vmin, 26px) clamp(34px, 5vmin, 72px);
+  border: none;
+  border-radius: 30px;
+  cursor: pointer;
+  transition: transform 0.08s ease, box-shadow 0.08s ease;
+}
+
+#prevBtn {
+  background: #d9d2ff;
+  color: #6b59a8;
+  box-shadow: 0 7px 0 #b9aef0;
+}
+
+.next-btn {
+  background: var(--yellow);
+  color: #8a6d00;
+  box-shadow: 0 7px 0 #e6c200;
+}
+
+#prevBtn:active { transform: translateY(4px); box-shadow: 0 3px 0 #b9aef0; }
+.next-btn:active { transform: translateY(4px); box-shadow: 0 3px 0 #e6c200; }
+
+.nav-btn:disabled {
+  opacity: 0.4;
+  cursor: default;
+  box-shadow: 0 7px 0 rgba(0, 0, 0, 0.06);
+  transform: none;
+}
+
+/* ============================================================
+   가로(landscape) 모드 최적화  ─ 아이패드 가로 기준
+   - 배치는 세로 모드와 동일: 문제(위) / 보기 카드(아래)
+   - 가로는 화면 높이가 좁으므로 문제를 살짝 작게 → 카드가 커짐
+   - 제목/버튼을 한 줄로 모아 가운데 영역을 최대한 확보
+   ============================================================ */
+@media (orientation: landscape) {
+  /* 상단: 제목 + 난이도 버튼을 한 줄로 (세로 공간 절약) */
+  header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: clamp(12px, 2vw, 32px);
+    max-width: none;
+  }
+
+  h1 {
+    margin: 0;
+    white-space: nowrap;
+    font-size: clamp(26px, 3.2vw, 48px);
+  }
+
+  .levels { flex-wrap: nowrap; }
+
+  /* 문제: 높이 차지를 줄여서 카드가 커지도록 */
+  .q-emoji { font-size: min(20vh, 26vw); }
+  .q-word  { font-size: min(13vh, 18vw); }
+
+  /* 보기 카드: 남는 공간을 시원하게 채움 */
+  .card .c-emoji { font-size: min(28vh, 22vw); }
+  .card .c-word  { font-size: min(26vh, 20vw); }
+
+  /* 하단: 메시지 + 버튼을 한 줄로 */
+  .footer {
+    flex-direction: row;
+    justify-content: center;
+    align-items: center;
+    gap: clamp(20px, 4vw, 60px);
+  }
+
+  .message {
+    flex: 0 1 auto;
+    min-height: 0;
+    margin: 0;
+  }
+}
