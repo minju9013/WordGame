@@ -1,6 +1,7 @@
 // ---------- 상태 ----------
+let step = 1;           // 현재 단계 (STEPS.id)
 let level = 1;          // 1: 그림+글자, 2: 그림만, 3: 글자만
-let current = null;     // 현재 문제 { target, options, level }
+let current = null;     // 현재 문제 { target, options, level, step }
 let locked = false;     // 정답 맞춘 뒤 잠금
 let history = [];       // 지나온 문제 기록
 let historyIndex = -1;  // 현재 보고 있는 문제의 위치
@@ -12,6 +13,27 @@ const $message = document.getElementById("message");
 const $nextBtn = document.getElementById("nextBtn");
 const $prevBtn = document.getElementById("prevBtn");
 const $levels = document.getElementById("levels");
+const $stepSelect = document.getElementById("stepSelect");
+
+// ---------- 단계 ----------
+function getWords() {
+  const s = STEPS.find((x) => x.id === step);
+  return s ? s.words : STEPS[0].words;
+}
+
+function initStepSelect() {
+  $stepSelect.innerHTML = STEPS.map(
+    (s) => `<option value="${s.id}">${s.label}</option>`
+  ).join("");
+  $stepSelect.value = String(step);
+}
+
+function resetGameState() {
+  bag = [];
+  history = [];
+  historyIndex = -1;
+  locked = false;
+}
 
 // ---------- 유틸 ----------
 function pick(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
@@ -100,11 +122,88 @@ function speak(text) {
   } catch (e) { /* 무시 */ }
 }
 
+// ---------- 효과음 (Web Audio — 외부 파일 없이 동작) ----------
+let audioCtx = null;
+
+function getAudioCtx() {
+  try {
+    if (!audioCtx) {
+      audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    }
+    if (audioCtx.state === "suspended") audioCtx.resume();
+    return audioCtx;
+  } catch (e) {
+    return null;
+  }
+}
+
+function tone(ctx, { freq, start, dur, type = "sine", vol = 0.22, slideTo = null }) {
+  const osc = ctx.createOscillator();
+  const gain = ctx.createGain();
+  osc.type = type;
+  osc.frequency.setValueAtTime(freq, start);
+  if (slideTo) osc.frequency.exponentialRampToValueAtTime(Math.max(slideTo, 40), start + dur);
+  gain.gain.setValueAtTime(vol, start);
+  gain.gain.exponentialRampToValueAtTime(0.001, start + dur);
+  osc.connect(gain);
+  gain.connect(ctx.destination);
+  osc.start(start);
+  osc.stop(start + dur + 0.02);
+}
+
+// 틀렸을 때: 띵~~ (높은 음이 길게 내려가는 소리)
+function playWrongSound() {
+  const ctx = getAudioCtx();
+  if (!ctx) return;
+  const t = ctx.currentTime;
+  tone(ctx, { freq: 880, start: t, dur: 0.55, vol: 0.28, slideTo: 180 });
+  tone(ctx, { freq: 660, start: t + 0.08, dur: 0.45, type: "triangle", vol: 0.12, slideTo: 140 });
+}
+
+// 정답: 짧은 딩동 + 박수
+function playCorrectSound() {
+  const ctx = getAudioCtx();
+  if (!ctx) return;
+  const t = ctx.currentTime;
+  tone(ctx, { freq: 523, start: t, dur: 0.12, vol: 0.2 });
+  tone(ctx, { freq: 659, start: t + 0.13, dur: 0.12, vol: 0.22 });
+  tone(ctx, { freq: 784, start: t + 0.26, dur: 0.18, vol: 0.24 });
+  playApplause(ctx, t + 0.2);
+}
+
+function playClap(ctx, when, vol = 0.22) {
+  const len = Math.floor(ctx.sampleRate * 0.04);
+  const buffer = ctx.createBuffer(1, len, ctx.sampleRate);
+  const data = buffer.getChannelData(0);
+  for (let i = 0; i < len; i++) data[i] = (Math.random() * 2 - 1) * (1 - i / len);
+
+  const src = ctx.createBufferSource();
+  const filter = ctx.createBiquadFilter();
+  const gain = ctx.createGain();
+  src.buffer = buffer;
+  filter.type = "bandpass";
+  filter.frequency.value = 1400;
+  filter.Q.value = 0.6;
+  src.connect(filter);
+  filter.connect(gain);
+  gain.connect(ctx.destination);
+  gain.gain.setValueAtTime(vol, when);
+  gain.gain.exponentialRampToValueAtTime(0.001, when + 0.05);
+  src.start(when);
+}
+
+function playApplause(ctx, startAt) {
+  for (let i = 0; i < 14; i++) {
+    playClap(ctx, startAt + i * 0.07 + Math.random() * 0.04, 0.16 + Math.random() * 0.08);
+  }
+}
+
 // 셔플 백에서 다음 정답 단어 뽑기
-// → 7개 단어를 모두 한 번씩 보여준 뒤에야 다시 반복 (같은 단어 연속 노출 방지)
+// → 모든 단어를 한 번씩 보여준 뒤에야 다시 반복 (같은 단어 연속 노출 방지)
 function nextTarget() {
+  const words = getWords();
   if (bag.length === 0) {
-    bag = shuffle(WORDS);
+    bag = shuffle(words);
     // 새 묶음 맨 앞이 직전 단어와 같으면 한 칸 뒤로 보내 연속 중복 방지
     if (current && bag.length > 1 && bag[0].word === current.target.word) {
       [bag[0], bag[1]] = [bag[1], bag[0]];
@@ -115,13 +214,14 @@ function nextTarget() {
 
 // ---------- 문제 만들기 ----------
 function buildQuestion() {
+  const words = getWords();
   // 정답 단어(셔플 백) + 보기용 오답 단어 1개
   const target = nextTarget();
-  let distractor = pick(WORDS);
-  while (distractor.word === target.word) distractor = pick(WORDS);
+  let distractor = pick(words);
+  while (distractor.word === target.word) distractor = pick(words);
 
   const options = shuffle([target, distractor]);
-  return { target, options, level };
+  return { target, options, level, step };
 }
 
 // 새 문제: 기록에 추가하고 보여주기
@@ -137,7 +237,9 @@ function newQuestion() {
 // 기록된 문제 보여주기
 function showQuestion(q) {
   current = q;
+  step = q.step;
   level = q.level;
+  syncStepSelect();
   syncLevelButtons();
 
   locked = false;
@@ -172,6 +274,11 @@ function nextQuestion() {
 // 이전 버튼 활성/비활성 표시
 function updateNav() {
   $prevBtn.disabled = historyIndex <= 0;
+}
+
+// 단계 셀렉트 동기화
+function syncStepSelect() {
+  $stepSelect.value = String(step);
 }
 
 // 난이도 버튼 하이라이트 동기화
@@ -248,6 +355,7 @@ function handleAnswer(opt, btn) {
     $message.className = "message";
 
     speak(current.target.word);
+    playCorrectSound();
     celebrate();
 
     // 잠깐 뒤 자동으로 다음 문제
@@ -255,8 +363,12 @@ function handleAnswer(opt, btn) {
   } else {
     btn.classList.add("wrong");
     $message.textContent = pick(ENCOURAGE);
-    $message.className = "message gentle";
-    setTimeout(() => btn.classList.remove("wrong"), 500);
+    $message.className = "message gentle wrong-flash";
+    playWrongSound();
+    setTimeout(() => {
+      btn.classList.remove("wrong");
+      $message.classList.remove("wrong-flash");
+    }, 650);
   }
 }
 
@@ -280,12 +392,20 @@ function celebrate() {
   }, 250);
 }
 
+// ---------- 단계 선택 ----------
+$stepSelect.addEventListener("change", () => {
+  step = Number($stepSelect.value);
+  resetGameState();
+  newQuestion();
+});
+
 // ---------- 난이도 선택 ----------
 $levels.addEventListener("click", (e) => {
   const btn = e.target.closest(".level-btn");
   if (!btn) return;
   level = Number(btn.dataset.level);
   syncLevelButtons();
+  resetGameState();
   newQuestion();
 });
 
@@ -305,5 +425,6 @@ if (document.fonts && document.fonts.ready) {
 }
 
 // ---------- 시작 ----------
+initStepSelect();
 svgEmoji(document.querySelector("header")); // 제목 / 난이도 버튼의 이모지도 SVG로
 newQuestion();

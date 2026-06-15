@@ -63,6 +63,42 @@ h1 {
   text-shadow: 2px 2px 0 #fff;
 }
 
+/* 단계 선택 셀렉트 */
+.step-select-wrap {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: clamp(10px, 1.6vmin, 18px);
+  margin-bottom: clamp(10px, 1.8vmin, 22px);
+}
+
+.step-label {
+  font-size: clamp(20px, 2.4vmin, 32px);
+  color: #9a7bb5;
+}
+
+.step-select {
+  font-family: inherit;
+  font-size: clamp(20px, 2.4vmin, 32px);
+  padding: clamp(10px, 1.4vmin, 16px) clamp(16px, 2.4vmin, 28px);
+  border: 4px solid #fff0a6;
+  border-radius: 22px;
+  background: #ffffff;
+  color: #6b4ea0;
+  box-shadow: 0 5px 0 rgba(0, 0, 0, 0.08);
+  cursor: pointer;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 16 16'%3E%3Cpath fill='%239a7bb5' d='M4 6l4 4 4-4'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right clamp(12px, 1.8vmin, 20px) center;
+  padding-right: clamp(36px, 4.5vmin, 52px);
+}
+
+.step-select:focus {
+  outline: 3px solid var(--purple);
+  outline-offset: 2px;
+}
+
 /* 난이도 선택 버튼 */
 .levels {
   display: flex;
@@ -253,6 +289,17 @@ main {
 
 .message.gentle { color: #7aa7e0; }
 
+.message.wrong-flash {
+  animation: wrong-flash 0.65s ease;
+}
+
+@keyframes wrong-flash {
+  0%, 100% { transform: scale(1); }
+  25% { transform: scale(1.06) rotate(-1deg); color: #ff8a8a; }
+  50% { transform: scale(1.04) rotate(1deg); }
+  75% { transform: scale(1.02); }
+}
+
 /* 이전 / 다음 버튼 */
 .controls {
   display: flex;
@@ -355,6 +402,10 @@ main {
   body { gap: 8px; }
 
   h1 { font-size: 26px; margin-bottom: 8px; }
+
+  .step-select-wrap { margin-bottom: 8px; gap: 8px; }
+  .step-label { font-size: 18px; }
+  .step-select { font-size: 18px; padding: 8px 36px 8px 14px; border-radius: 16px; }
 
   .levels { gap: 8px; }
   .level-btn { font-size: 19px; padding: 8px 14px; border-radius: 18px; }

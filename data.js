@@ -1,13 +1,32 @@
-// ---------- 단어 데이터 ----------
-// 여기에 단어와 이모지를 추가/수정하면 게임에 바로 반영됩니다.
-const WORDS = [
-  { word: "곰",   emoji: "🐻" },
-  { word: "달",   emoji: "🌙" },
-  { word: "옷",   emoji: "👕" },
-  { word: "집",   emoji: "🏠" },
-  { word: "책",   emoji: "📚" },
-  { word: "알",   emoji: "🥚" },
-  { word: "사자", emoji: "🦁" },
+// ---------- 단계별 단어 데이터 ----------
+// STEPS 배열에 단계를 추가하거나 words를 수정하면 게임에 바로 반영됩니다.
+const STEPS = [
+  {
+    id: 1,
+    label: "Step1",
+    words: [
+      { word: "곰",   emoji: "🐻" },
+      { word: "달",   emoji: "🌙" },
+      { word: "옷",   emoji: "👕" },
+      { word: "집",   emoji: "🏠" },
+      { word: "책",   emoji: "📚" },
+      { word: "알",   emoji: "🥚" },
+      { word: "사자", emoji: "🦁" },
+    ],
+  },
+  {
+    id: 2,
+    label: "Step2",
+    words: [
+      { word: "모자", emoji: "🎩" },
+      { word: "바위", emoji: "🪨" },
+      { word: "쿠키", emoji: "🍪" },
+      { word: "아빠", emoji: "👨" },
+      { word: "토끼", emoji: "🐰" },
+      { word: "구름", emoji: "☁️" },
+      { word: "늑대", emoji: "🐺" },
+    ],
+  },
 ];
 
 // 칭찬 / 격려 메시지
