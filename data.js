@@ -27,6 +27,19 @@ const STEPS = [
       { word: "늑대", emoji: "🐺" },
     ],
   },
+  {
+    id: 3,
+    label: "Step3",
+    words: [
+      { word: "수건", emoji: "🧺" },
+      { word: "이불", emoji: "🛏️" },
+      { word: "지붕", emoji: "🏡" },
+      { word: "친구", emoji: "👫" },
+      { word: "버튼", emoji: "🔘" },
+      { word: "버섯", emoji: "🍄" },
+      { word: "여행", emoji: "✈️" },
+    ],
+  },
 ];
 
 // 칭찬 / 격려 메시지
