@@ -25,17 +25,24 @@
 </head>
 <body>
   <header>
-    <h1> 한글 단어 맞추기 </h1>
+    <img class="logo" src="logo.png" alt="한글 놀이" />
+
+    <nav class="tabs" id="tabs">
+      <button class="tab active" data-tab="w1">그림＋글자</button>
+      <button class="tab" data-tab="w2">그림만</button>
+      <button class="tab" data-tab="w3">글자만</button>
+      <button class="tab" data-tab="match">선긋기</button>
+    </nav>
 
     <div class="step-select-wrap">
-      <label class="step-label" for="stepSelect">단계 선택</label>
-      <select class="step-select" id="stepSelect" aria-label="단계 선택"></select>
-    </div>
-
-    <div class="levels" id="levels">
-      <button class="level-btn active" data-level="1">🖼️ 그림＋글자</button>
-      <button class="level-btn" data-level="2">🐻 그림만</button>
-      <button class="level-btn" data-level="3">🔤 글자만</button>
+      <div class="dropdown" id="stepDropdown">
+        <button type="button" class="dropdown-btn" id="stepDdBtn"
+                aria-haspopup="listbox" aria-expanded="false" aria-label="단계 선택">
+          <span id="stepDdLabel">Step1</span>
+          <span class="dropdown-caret" aria-hidden="true">▾</span>
+        </button>
+        <ul class="dropdown-menu" id="stepDdMenu" role="listbox" hidden></ul>
+      </div>
     </div>
   </header>
 
@@ -43,6 +50,15 @@
     <div class="play">
       <div class="question" id="question"></div>
       <div class="cards" id="cards"></div>
+    </div>
+
+    <div class="match" id="match" hidden>
+      <div class="match-hint" id="matchHint">그림과 글자를 선으로 이어요 ✏️</div>
+      <div class="match-board" id="matchBoard">
+        <div class="match-col" id="matchLeft"></div>
+        <div class="match-col" id="matchRight"></div>
+        <svg class="match-svg" id="matchSvg"></svg>
+      </div>
     </div>
 
     <div class="footer">

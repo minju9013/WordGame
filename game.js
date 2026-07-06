@@ -1,6 +1,7 @@
 // ---------- 상태 ----------
 let step = 1;           // 현재 단계 (STEPS.id)
-let level = 1;          // 1: 그림+글자, 2: 그림만, 3: 글자만
+let gameType = "word";  // "word": 단어 맞추기, "match": 선긋기
+let level = 1;          // (단어 맞추기) 1: 그림+글자, 2: 그림만, 3: 글자만
 let current = null;     // 현재 문제 { target, options, level, step }
 let locked = false;     // 정답 맞춘 뒤 잠금
 let history = [];       // 지나온 문제 기록
@@ -12,8 +13,23 @@ const $cards = document.getElementById("cards");
 const $message = document.getElementById("message");
 const $nextBtn = document.getElementById("nextBtn");
 const $prevBtn = document.getElementById("prevBtn");
-const $levels = document.getElementById("levels");
-const $stepSelect = document.getElementById("stepSelect");
+const $tabs = document.getElementById("tabs");
+const $stepDropdown = document.getElementById("stepDropdown");
+const $stepDdBtn = document.getElementById("stepDdBtn");
+const $stepDdLabel = document.getElementById("stepDdLabel");
+const $stepDdMenu = document.getElementById("stepDdMenu");
+
+const $play = document.querySelector(".play");
+const $footer = document.querySelector(".footer");
+const $match = document.getElementById("match");
+const $matchLeft = document.getElementById("matchLeft");
+const $matchRight = document.getElementById("matchRight");
+const $matchSvg = document.getElementById("matchSvg");
+const $matchBoard = document.getElementById("matchBoard");
+const $matchHint = document.getElementById("matchHint");
+
+const MATCH_HINT_DEFAULT = "그림과 글자를 선으로 이어요 ✏️";
+let matchState = null;   // 선긋기 게임 상태
 
 // ---------- 단계 ----------
 function getWords() {
@@ -22,10 +38,27 @@ function getWords() {
 }
 
 function initStepSelect() {
-  $stepSelect.innerHTML = STEPS.map(
-    (s) => `<option value="${s.id}">${s.label}</option>`
+  $stepDdMenu.innerHTML = STEPS.map(
+    (s) => `<li class="dropdown-item" role="option" data-value="${s.id}">
+      <span class="check">${s.id === step ? "✓" : ""}</span>${s.label}
+    </li>`
   ).join("");
-  $stepSelect.value = String(step);
+  syncStepSelect();
+}
+
+function openStepMenu() {
+  $stepDdMenu.hidden = false;
+  $stepDropdown.classList.add("open");
+  $stepDdBtn.setAttribute("aria-expanded", "true");
+}
+function closeStepMenu() {
+  $stepDdMenu.hidden = true;
+  $stepDropdown.classList.remove("open");
+  $stepDdBtn.setAttribute("aria-expanded", "false");
+}
+function toggleStepMenu() {
+  if ($stepDdMenu.hidden) openStepMenu();
+  else closeStepMenu();
 }
 
 function resetGameState() {
@@ -240,7 +273,7 @@ function showQuestion(q) {
   step = q.step;
   level = q.level;
   syncStepSelect();
-  syncLevelButtons();
+  syncTabs();
 
   locked = false;
   $message.textContent = "";
@@ -276,15 +309,26 @@ function updateNav() {
   $prevBtn.disabled = historyIndex <= 0;
 }
 
-// 단계 셀렉트 동기화
+// 단계 드롭다운 동기화 (라벨 + 선택 표시)
 function syncStepSelect() {
-  $stepSelect.value = String(step);
+  const cur = STEPS.find((s) => s.id === step) || STEPS[0];
+  $stepDdLabel.textContent = cur.label;
+  $stepDdMenu.querySelectorAll(".dropdown-item").forEach((li) => {
+    const isCur = Number(li.dataset.value) === step;
+    li.classList.toggle("active", isCur);
+    const check = li.querySelector(".check");
+    if (check) check.textContent = isCur ? "✓" : "";
+  });
 }
 
-// 난이도 버튼 하이라이트 동기화
-function syncLevelButtons() {
-  document.querySelectorAll(".level-btn").forEach((b) => {
-    b.classList.toggle("active", Number(b.dataset.level) === level);
+// 현재 상태(게임 종류/난이도)에 맞는 탭 하이라이트
+function currentTab() {
+  return gameType === "match" ? "match" : "w" + level;
+}
+function syncTabs() {
+  const active = currentTab();
+  document.querySelectorAll(".tab").forEach((b) => {
+    b.classList.toggle("active", b.dataset.tab === active);
   });
 }
 
@@ -392,21 +436,275 @@ function celebrate() {
   }, 250);
 }
 
-// ---------- 단계 선택 ----------
-$stepSelect.addEventListener("change", () => {
-  step = Number($stepSelect.value);
+// ============================================================
+//  선긋기(매칭) 모드 (level 4)
+// ============================================================
+
+// 현재 게임 종류에 맞게 화면 전환
+function updateModeView() {
+  const isMatch = gameType === "match";
+  $play.hidden = isMatch;
+  $footer.hidden = isMatch;
+  $match.hidden = !isMatch;
+}
+
+// 새 라운드 시작 / 다시 시작
+function startMatchRound() {
+  const words = getWords();
+  const count = Math.min(3, words.length);
+  const chosen = shuffle(words).slice(0, count);
+  const rightOrder = shuffle(chosen);
+
+  matchState = {
+    connections: [],   // [{ left, right, line }]
+    matched: 0,
+    total: count,
+    selected: null,    // 톡 눌러 선택한 점
+    dragFrom: null,    // 드래그 시작 아이템
+    moved: false,
+    previewLine: null,
+    startX: 0,
+    startY: 0,
+  };
+
+  $matchLeft.innerHTML = chosen.map((w) => matchItemHTML("left", w, true)).join("");
+  $matchRight.innerHTML = rightOrder.map((w) => matchItemHTML("right", w, false)).join("");
+  $matchSvg.innerHTML = "";
+  $matchHint.textContent = MATCH_HINT_DEFAULT;
+  $matchHint.className = "match-hint";
+  svgEmoji($matchLeft);
+}
+
+function matchItemHTML(side, w, showEmoji) {
+  const content = showEmoji
+    ? `<span class="m-emoji">${w.emoji}</span>`
+    : `<span class="m-word">${w.word}</span>`;
+  return `<div class="match-item" data-side="${side}" data-word="${w.word}">
+      <div class="match-card">${content}</div>
+      <div class="match-dot"></div>
+    </div>`;
+}
+
+// 좌표 유틸 (보드 기준 픽셀 좌표)
+function dotCenter(item) {
+  const dot = item.querySelector(".match-dot");
+  const r = dot.getBoundingClientRect();
+  const b = $matchBoard.getBoundingClientRect();
+  return { x: r.left - b.left + r.width / 2, y: r.top - b.top + r.height / 2 };
+}
+function boardXY(clientX, clientY) {
+  const b = $matchBoard.getBoundingClientRect();
+  return { x: clientX - b.left, y: clientY - b.top };
+}
+function svgLine(x1, y1, x2, y2, klass) {
+  const ln = document.createElementNS("http://www.w3.org/2000/svg", "line");
+  ln.setAttribute("x1", x1);
+  ln.setAttribute("y1", y1);
+  ln.setAttribute("x2", x2);
+  ln.setAttribute("y2", y2);
+  ln.setAttribute("class", klass);
+  $matchSvg.appendChild(ln);
+  return ln;
+}
+function itemFromPoint(x, y) {
+  const el = document.elementFromPoint(x, y);
+  return el ? el.closest(".match-item") : null;
+}
+
+function setSelected(item) {
+  clearSelected();
+  matchState.selected = item;
+  item.classList.add("sel");
+}
+function clearSelected() {
+  if (matchState && matchState.selected) {
+    matchState.selected.classList.remove("sel");
+    matchState.selected = null;
+  }
+}
+
+// 두 아이템 연결 시도 (정답/오답 처리)
+function tryConnect(a, b) {
+  if (!a || !b || a === b) return;
+  if (a.dataset.side === b.dataset.side) return;
+  if (a.classList.contains("matched") || b.classList.contains("matched")) return;
+
+  const left = a.dataset.side === "left" ? a : b;
+  const right = a.dataset.side === "right" ? a : b;
+  const correct = left.dataset.word === right.dataset.word;
+
+  if (correct) {
+    left.classList.add("matched");
+    right.classList.add("matched");
+    const c1 = dotCenter(left);
+    const c2 = dotCenter(right);
+    const line = svgLine(c1.x, c1.y, c2.x, c2.y, "match-line");
+    matchState.connections.push({ left, right, line });
+    matchState.matched += 1;
+
+    speak(left.dataset.word);
+    playCorrectSound();
+
+    if (matchState.matched >= matchState.total) {
+      $matchHint.textContent = pick(PRAISE);
+      celebrate();
+      setTimeout(() => { if (gameType === "match") startMatchRound(); }, 2800);
+    }
+  } else {
+    playWrongSound();
+    const c1 = dotCenter(a);
+    const c2 = dotCenter(b);
+    const line = svgLine(c1.x, c1.y, c2.x, c2.y, "match-line-wrong");
+    a.classList.add("wrong");
+    b.classList.add("wrong");
+    setTimeout(() => {
+      line.remove();
+      a.classList.remove("wrong");
+      b.classList.remove("wrong");
+    }, 550);
+  }
+}
+
+// 크기/방향 변경 시 연결된 선 다시 그리기
+function redrawMatchLines() {
+  if (gameType !== "match" || !matchState) return;
+  matchState.connections.forEach(({ left, right, line }) => {
+    const c1 = dotCenter(left);
+    const c2 = dotCenter(right);
+    line.setAttribute("x1", c1.x);
+    line.setAttribute("y1", c1.y);
+    line.setAttribute("x2", c2.x);
+    line.setAttribute("y2", c2.y);
+  });
+}
+
+// ----- 포인터(마우스/터치) 이벤트 -----
+function onMatchDown(e) {
+  if (gameType !== "match" || !matchState) return;
+  const item = e.target.closest(".match-item");
+  if (!item || item.classList.contains("matched")) return;
+  e.preventDefault();
+  getAudioCtx(); // 첫 상호작용에서 오디오 활성화
+
+  // 남아있을 수 있는 임시 선(미리보기/오답) 정리
+  $matchSvg.querySelectorAll(".match-line-preview, .match-line-wrong").forEach((l) => l.remove());
+
+  matchState.dragFrom = item;
+  matchState.moved = false;
+  matchState.startX = e.clientX;
+  matchState.startY = e.clientY;
+
+  const c = dotCenter(item);
+  matchState.previewLine = svgLine(c.x, c.y, c.x, c.y, "match-line-preview");
+}
+
+function onMatchMove(e) {
+  if (!matchState || !matchState.dragFrom) return;
+  const p = boardXY(e.clientX, e.clientY);
+  if (Math.hypot(e.clientX - matchState.startX, e.clientY - matchState.startY) > 8) {
+    matchState.moved = true;
+  }
+  if (matchState.previewLine) {
+    matchState.previewLine.setAttribute("x2", p.x);
+    matchState.previewLine.setAttribute("y2", p.y);
+  }
+}
+
+function onMatchUp(e) {
+  if (!matchState || !matchState.dragFrom) return;
+  const from = matchState.dragFrom;
+  matchState.dragFrom = null;
+  if (matchState.previewLine) {
+    matchState.previewLine.remove();
+    matchState.previewLine = null;
+  }
+
+  const drop = itemFromPoint(e.clientX, e.clientY);
+  const droppedOnOther =
+    drop && drop !== from &&
+    drop.dataset.side !== from.dataset.side &&
+    !drop.classList.contains("matched");
+
+  if (droppedOnOther) {
+    clearSelected();
+    tryConnect(from, drop);
+    return;
+  }
+
+  if (!matchState.moved) {
+    // 톡 두 번 눌러 잇기
+    const sel = matchState.selected;
+    if (sel && sel !== from && sel.dataset.side !== from.dataset.side) {
+      clearSelected();
+      tryConnect(sel, from);
+    } else if (sel === from) {
+      clearSelected();
+    } else {
+      setSelected(from);
+    }
+  } else {
+    clearSelected();
+  }
+}
+
+function onMatchCancel() {
+  if (!matchState) return;
+  if (matchState.previewLine) {
+    matchState.previewLine.remove();
+    matchState.previewLine = null;
+  }
+  matchState.dragFrom = null;
+}
+
+$matchBoard.addEventListener("pointerdown", onMatchDown);
+window.addEventListener("pointermove", onMatchMove);
+window.addEventListener("pointerup", onMatchUp);
+window.addEventListener("pointercancel", onMatchCancel);
+
+// 현재 게임 종류에 맞는 새 게임 시작
+function startCurrentGame() {
   resetGameState();
-  newQuestion();
+  updateModeView();
+  if (gameType === "match") startMatchRound();
+  else newQuestion();
+}
+
+// ---------- 단계 선택 (커스텀 드롭다운, 아래로 펼침) ----------
+$stepDdBtn.addEventListener("click", (e) => {
+  e.stopPropagation();
+  toggleStepMenu();
 });
 
-// ---------- 난이도 선택 ----------
-$levels.addEventListener("click", (e) => {
-  const btn = e.target.closest(".level-btn");
+$stepDdMenu.addEventListener("click", (e) => {
+  const li = e.target.closest(".dropdown-item");
+  if (!li) return;
+  step = Number(li.dataset.value);
+  syncStepSelect();
+  closeStepMenu();
+  startCurrentGame();
+});
+
+// 바깥 클릭 / ESC 로 닫기
+document.addEventListener("click", (e) => {
+  if (!$stepDropdown.contains(e.target)) closeStepMenu();
+});
+document.addEventListener("keydown", (e) => {
+  if (e.key === "Escape") closeStepMenu();
+});
+
+// ---------- 모드 탭 선택 (그림+글자 / 그림만 / 글자만 / 선긋기) ----------
+$tabs.addEventListener("click", (e) => {
+  const btn = e.target.closest(".tab");
   if (!btn) return;
-  level = Number(btn.dataset.level);
-  syncLevelButtons();
-  resetGameState();
-  newQuestion();
+  const tab = btn.dataset.tab;
+  if (tab === "match") {
+    gameType = "match";
+  } else {
+    gameType = "word";
+    level = Number(tab.slice(1)); // "w1" -> 1
+  }
+  syncTabs();
+  startCurrentGame();
 });
 
 $nextBtn.addEventListener("click", nextQuestion);
@@ -416,7 +714,10 @@ $prevBtn.addEventListener("click", prevQuestion);
 let resizeTimer = null;
 window.addEventListener("resize", () => {
   clearTimeout(resizeTimer);
-  resizeTimer = setTimeout(fitAll, 120);
+  resizeTimer = setTimeout(() => {
+    fitAll();
+    redrawMatchLines();
+  }, 120);
 });
 
 // 폰트 로딩이 끝난 뒤에도 한 번 더 맞춤 (폰트에 따라 글자 폭이 달라지므로)
@@ -426,5 +727,7 @@ if (document.fonts && document.fonts.ready) {
 
 // ---------- 시작 ----------
 initStepSelect();
-svgEmoji(document.querySelector("header")); // 제목 / 난이도 버튼의 이모지도 SVG로
-newQuestion();
+syncTabs();
+updateModeView();
+if (gameType === "match") startMatchRound();
+else newQuestion();

@@ -13,6 +13,8 @@
   user-select: none;
 }
 
+[hidden] { display: none !important; }
+
 /* Twemoji(SVG) 이모지: 글자 크기에 맞춰 자동 확대, 기기 상관없이 동일하게 표시 */
 img.emoji {
   height: 1em;
@@ -52,83 +54,135 @@ body {
 header {
   width: 100%;
   max-width: 1200px;
-  text-align: center;
   flex: 0 0 auto;
-}
-
-h1 {
-  font-size: clamp(30px, 4.4vmin, 60px);
-  margin: 0 0 clamp(10px, 1.8vmin, 22px);
-  color: #ff6fa5;
-  text-shadow: 2px 2px 0 #fff;
-}
-
-/* 단계 선택 셀렉트 */
-.step-select-wrap {
   display: flex;
   align-items: center;
-  justify-content: center;
-  gap: clamp(10px, 1.6vmin, 18px);
-  margin-bottom: clamp(10px, 1.8vmin, 22px);
+  gap: clamp(14px, 2.4vmin, 34px);
+  margin-bottom: clamp(6px, 1.4vmin, 16px);
 }
 
-.step-label {
-  font-size: clamp(20px, 2.4vmin, 32px);
-  color: #9a7bb5;
+/* 대표 로고 */
+.logo {
+  flex: 0 0 auto;
+  height: clamp(44px, 7vmin, 76px);
+  width: auto;
+  -webkit-user-drag: none;
+  pointer-events: none;
 }
 
-.step-select {
+/* 모드 탭 (텍스트형) */
+.tabs {
+  display: flex;
+  align-items: center;
+  gap: clamp(14px, 2.6vmin, 40px);
+  flex: 1 1 auto;
+  min-width: 0;
+  flex-wrap: wrap;
+}
+
+.tab {
   font-family: inherit;
-  font-size: clamp(20px, 2.4vmin, 32px);
-  padding: clamp(10px, 1.4vmin, 16px) clamp(16px, 2.4vmin, 28px);
-  border: 4px solid #fff0a6;
-  border-radius: 22px;
-  background: #ffffff;
-  color: #6b4ea0;
-  box-shadow: 0 5px 0 rgba(0, 0, 0, 0.08);
+  font-size: clamp(19px, 2.6vmin, 34px);
+  padding: clamp(4px, 0.8vmin, 8px) 0;
+  border: none;
+  background: none;
+  color: #7b7690;
   cursor: pointer;
-  appearance: none;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 16 16'%3E%3Cpath fill='%239a7bb5' d='M4 6l4 4 4-4'/%3E%3C/svg%3E");
-  background-repeat: no-repeat;
-  background-position: right clamp(12px, 1.8vmin, 20px) center;
-  padding-right: clamp(36px, 4.5vmin, 52px);
+  position: relative;
+  transition: color 0.12s ease;
 }
 
-.step-select:focus {
+.tab.active {
+  color: #3d7bff;
+  font-weight: bold;
+}
+
+.tab.active::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -3px;
+  height: 3px;
+  border-radius: 3px;
+  background: #3d7bff;
+}
+
+.tab:active { transform: translateY(1px); }
+
+/* 단계 선택 드롭다운 (오른쪽, 아래로 펼침) */
+.step-select-wrap {
+  flex: 0 0 auto;
+  margin-left: auto;
+}
+
+.dropdown { position: relative; }
+
+.dropdown-btn {
+  font-family: inherit;
+  font-size: clamp(18px, 2.2vmin, 30px);
+  padding: clamp(8px, 1.2vmin, 14px) clamp(16px, 2.4vmin, 26px);
+  border: 2px solid #e3ddea;
+  border-radius: 18px;
+  background: #ffffff;
+  color: #4a4a6a;
+  box-shadow: 0 3px 0 rgba(0, 0, 0, 0.05);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: clamp(8px, 1.4vmin, 14px);
+  white-space: nowrap;
+}
+
+.dropdown-btn:focus-visible {
   outline: 3px solid var(--purple);
   outline-offset: 2px;
 }
 
-/* 난이도 선택 버튼 */
-.levels {
-  display: flex;
-  justify-content: center;
-  gap: clamp(8px, 1.6vmin, 18px);
-  flex-wrap: wrap;
-}
-
-.level-btn {
-  font-family: inherit;
-  font-size: clamp(20px, 2.6vmin, 34px);
-  padding: clamp(10px, 1.5vmin, 18px) clamp(16px, 2.6vmin, 34px);
-  border: none;
-  border-radius: 26px;
-  background: #ffffff;
+.dropdown-caret {
   color: #9a7bb5;
-  box-shadow: 0 5px 0 rgba(0, 0, 0, 0.08);
+  font-size: 0.7em;
+  transition: transform 0.15s ease;
+}
+.dropdown.open .dropdown-caret { transform: rotate(180deg); }
+
+.dropdown-menu {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  min-width: 100%;
+  margin: 0;
+  padding: clamp(5px, 0.8vmin, 8px);
+  list-style: none;
+  background: #fff;
+  border: 2px solid #e3ddea;
+  border-radius: 16px;
+  box-shadow: 0 10px 24px rgba(90, 74, 99, 0.18);
+  z-index: 50;
+}
+
+.dropdown-item {
+  font-family: inherit;
+  font-size: clamp(18px, 2.2vmin, 30px);
+  color: #4a4a6a;
+  padding: clamp(8px, 1.2vmin, 12px) clamp(14px, 2vmin, 22px);
+  border-radius: 12px;
   cursor: pointer;
-  transition: transform 0.08s ease;
+  white-space: nowrap;
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
-.level-btn.active {
-  background: var(--purple);
-  color: #fff;
-  box-shadow: 0 5px 0 #9a78d6;
+.dropdown-item:hover { background: #f4eefc; }
+
+.dropdown-item.active {
+  background: #efe6fb;
+  color: #6b4ea0;
+  font-weight: bold;
 }
 
-.level-btn:active {
-  transform: translateY(3px);
-}
+.dropdown-item .check { width: 1em; color: #7b5bd0; }
 
 /* ---------- 가운데 게임 영역 ---------- */
 main {
@@ -278,6 +332,134 @@ main {
   80% { transform: translateX(8px); }
 }
 
+/* ---------- 선긋기(매칭) 모드 ---------- */
+.match {
+  width: 100%;
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: clamp(8px, 1.6vmin, 20px);
+}
+
+.match-hint {
+  font-size: clamp(22px, 2.8vmin, 40px);
+  color: #b09bc4;
+  flex: 0 0 auto;
+}
+
+.match-board {
+  position: relative;
+  width: 100%;
+  max-width: 900px;
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  justify-content: space-between;
+  gap: clamp(40px, 10vw, 180px);
+  padding: clamp(6px, 1.5vmin, 16px);
+  touch-action: none;
+}
+
+.match-col {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-around;
+  gap: clamp(10px, 2vmin, 26px);
+  flex: 0 0 clamp(110px, 26vw, 250px);
+  min-height: 0;
+}
+
+.match-svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  overflow: visible;
+  z-index: 3;
+}
+
+.match-item {
+  display: flex;
+  align-items: center;
+  gap: clamp(6px, 1.4vmin, 14px);
+  flex: 1 1 0;
+  min-height: 0;
+  cursor: pointer;
+  touch-action: none;
+}
+
+#matchRight .match-item { flex-direction: row-reverse; }
+
+.match-card {
+  flex: 1 1 0;
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+  background: transparent;
+  border-radius: clamp(14px, 2.2vmin, 22px);
+  box-shadow: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: clamp(6px, 1.4vmin, 16px);
+  border: 2px solid #e7dccf;
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+
+.match-card .m-emoji { font-size: clamp(48px, 13vmin, 130px); line-height: 1; }
+.match-card .m-word {
+  font-size: clamp(38px, 10vmin, 104px);
+  font-weight: bold;
+  color: #4a4a6a;
+  white-space: nowrap;
+  max-width: 100%;
+  line-height: 1.05;
+}
+
+.match-dot {
+  width: clamp(22px, 3vmin, 34px);
+  height: clamp(22px, 3vmin, 34px);
+  border-radius: 50%;
+  background: #ff6b6b;
+  box-shadow: 0 3px 0 rgba(0, 0, 0, 0.12);
+  flex: 0 0 auto;
+  transition: transform 0.12s ease, box-shadow 0.12s ease, background 0.15s ease;
+}
+
+.match-item.sel .match-dot {
+  transform: scale(1.35);
+  box-shadow: 0 0 0 8px rgba(255, 107, 107, 0.25);
+}
+
+.match-item.matched { cursor: default; }
+.match-item.matched .match-dot { background: var(--mint); }
+.match-item.matched .match-card {
+  background: #f3fffa;
+  border-color: var(--mint);
+}
+.match-item.wrong .match-card { animation: shake 0.5s ease; }
+
+/* SVG 선 */
+.match-line-preview {
+  stroke: #c9a7ff;
+  stroke-width: 9;
+  stroke-dasharray: 10 12;
+  stroke-linecap: round;
+}
+.match-line {
+  stroke: var(--mint);
+  stroke-width: 13;
+  stroke-linecap: round;
+}
+.match-line-wrong {
+  stroke: #ff8a8a;
+  stroke-width: 11;
+  stroke-linecap: round;
+}
+
 /* ---------- 메시지 ---------- */
 .message {
   font-size: clamp(40px, 4.6vmin, 72px);
@@ -348,22 +530,14 @@ main {
    - 제목/버튼을 한 줄로 모아 가운데 영역을 최대한 확보
    ============================================================ */
 @media (orientation: landscape) {
-  /* 상단: 제목 + 난이도 버튼을 한 줄로 (세로 공간 절약) */
+  /* 상단: 로고 + 탭 + 단계선택 한 줄 (세로 공간 절약) */
   header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
     gap: clamp(12px, 2vw, 32px);
     max-width: none;
   }
 
-  h1 {
-    margin: 0;
-    white-space: nowrap;
-    font-size: clamp(26px, 3.2vw, 48px);
-  }
-
-  .levels { flex-wrap: nowrap; }
+  .tabs { flex-wrap: nowrap; }
+  .tab { white-space: nowrap; }
 
   /* 가로 모드: 문제 영역 높이 320px 고정 → 나머지는 카드가 사용 */
   .question {
@@ -401,14 +575,14 @@ main {
 @media (orientation: portrait) and (max-width: 540px) {
   body { gap: 8px; }
 
-  h1 { font-size: 26px; margin-bottom: 8px; }
+  header { gap: 10px; flex-wrap: wrap; margin-bottom: 6px; }
+  .logo { height: 40px; }
 
-  .step-select-wrap { margin-bottom: 8px; gap: 8px; }
-  .step-label { font-size: 18px; }
-  .step-select { font-size: 18px; padding: 8px 36px 8px 14px; border-radius: 16px; }
+  .tabs { gap: 14px; }
+  .tab { font-size: 18px; }
 
-  .levels { gap: 8px; }
-  .level-btn { font-size: 19px; padding: 8px 14px; border-radius: 18px; }
+  .dropdown-btn { font-size: 17px; padding: 7px 14px; border-radius: 14px; }
+  .dropdown-item { font-size: 17px; padding: 8px 14px; }
 
   .message { font-size: 34px; min-height: 40px; }
 
