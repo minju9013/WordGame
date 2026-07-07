@@ -760,10 +760,12 @@ function setupTraceCanvas(canvas) {
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
   ctx.lineCap = "round";
   ctx.lineJoin = "round";
-  ctx.lineWidth = Math.max(1.5, rect.width * traceBrush);
+  // 굵기 기준: 칸의 짧은 변(글자 크기와 동일 기준) → 글자 수와 무관하게 일정
+  const ref = Math.min(rect.width, rect.height);
+  canvas._ref = ref;
+  ctx.lineWidth = Math.max(1.5, ref * traceBrush);
   ctx.strokeStyle = "#6b4ea0";
   canvas._ctx = ctx;
-  canvas._w = rect.width;
 
   if (!canvas._bound) {
     canvas.addEventListener("pointerdown", onTraceDown);
@@ -780,13 +782,13 @@ function traceXY(canvas, e) {
 }
 
 // 현재 도구(펜/지우개)에 맞게 캔버스 그리기 설정
-function applyTool(ctx, w) {
+function applyTool(ctx, ref) {
   if (traceTool === "eraser") {
     ctx.globalCompositeOperation = "destination-out";
-    ctx.lineWidth = Math.max(6, w * traceBrush * TRACE_ERASER_MULT);
+    ctx.lineWidth = Math.max(6, ref * traceBrush * TRACE_ERASER_MULT);
   } else {
     ctx.globalCompositeOperation = "source-over";
-    ctx.lineWidth = Math.max(1.5, w * traceBrush);
+    ctx.lineWidth = Math.max(1.5, ref * traceBrush);
   }
 }
 
@@ -799,7 +801,7 @@ function onTraceDown(e) {
   try { canvas.setPointerCapture(e.pointerId); } catch (_) {}
   const p = traceXY(canvas, e);
   const ctx = canvas._ctx;
-  applyTool(ctx, canvas._w || 100);
+  applyTool(ctx, canvas._ref || 100);
   ctx.beginPath();
   ctx.moveTo(p.x, p.y);
   // 점 하나라도 찍히도록
@@ -832,7 +834,7 @@ function clearTrace() {
 function setTraceBrush(factor) {
   traceBrush = factor;
   $traceGrid.querySelectorAll("canvas").forEach((c) => {
-    if (c._ctx) c._ctx.lineWidth = Math.max(1.5, (c._w || 100) * traceBrush);
+    if (c._ctx) c._ctx.lineWidth = Math.max(1.5, (c._ref || 100) * traceBrush);
   });
   $brushSelect.querySelectorAll(".brush-btn").forEach((b) => {
     b.classList.toggle("active", Number(b.dataset.brush) === traceBrush);
