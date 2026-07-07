@@ -42,9 +42,9 @@ const $toolSelect = document.getElementById("toolSelect");
 let traceWords = [];     // 따라쓰기: 현재 단계 단어들
 let traceIndex = 0;      // 현재 보고 있는 단어 위치
 let traceDrawing = false;
-let traceBrush = 0.03;   // 펜 굵기 = 칸 너비 대비 비율
+let traceBrush = 0.03;   // 굵기 = 칸 너비 대비 비율 (펜/지우개 공용)
 let traceTool = "pen";   // "pen": 그리기, "eraser": 지우개
-const TRACE_ERASER = 0.14; // 지우개 굵기 = 칸 너비 대비 비율
+const TRACE_ERASER_MULT = 3.2; // 지우개는 같은 단계라도 더 굵게
 
 const TRACE_GUIDE_ROWS = 2;  // 흐린 가이드 글자 줄 수
 const TRACE_EMPTY_ROWS = 1;  // 빈칸(혼자 쓰기) 줄 수
@@ -783,7 +783,7 @@ function traceXY(canvas, e) {
 function applyTool(ctx, w) {
   if (traceTool === "eraser") {
     ctx.globalCompositeOperation = "destination-out";
-    ctx.lineWidth = Math.max(14, w * TRACE_ERASER);
+    ctx.lineWidth = Math.max(6, w * traceBrush * TRACE_ERASER_MULT);
   } else {
     ctx.globalCompositeOperation = "source-over";
     ctx.lineWidth = Math.max(1.5, w * traceBrush);
@@ -853,8 +853,6 @@ $toolSelect.addEventListener("click", (e) => {
   $toolSelect.querySelectorAll(".tool-btn").forEach((b) => {
     b.classList.toggle("active", b.dataset.tool === traceTool);
   });
-  // 지우개일 땐 굵기 선택 비활성 느낌으로
-  $brushSelect.classList.toggle("dim", traceTool === "eraser");
 });
 
 function tracePrev() {

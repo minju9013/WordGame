@@ -575,9 +575,9 @@ main {
   border-radius: 50%;
   background: #6b4ea0;
 }
-.brush-dot.s { width: 5px;  height: 5px; }
-.brush-dot.m { width: 8px;  height: 8px; }
-.brush-dot.l { width: 12px; height: 12px; }
+.brush-dot.s { width: 7px;  height: 7px; }
+.brush-dot.m { width: 11px; height: 11px; }
+.brush-dot.l { width: 17px; height: 17px; }
 
 /* 도구 선택 (펜 / 지우개) */
 .tool-select {
