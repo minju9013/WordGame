@@ -460,6 +460,165 @@ main {
   stroke-linecap: round;
 }
 
+/* ---------- 따라쓰기 모드 ---------- */
+.trace {
+  width: 100%;
+  max-width: 1150px;
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  gap: clamp(16px, 3vmin, 44px);
+  align-items: stretch;
+}
+
+.trace-left {
+  flex: 0 0 32%;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: clamp(8px, 1.8vmin, 22px);
+}
+
+.trace-emoji {
+  font-size: clamp(80px, 20vmin, 220px);
+  line-height: 1;
+  cursor: pointer;
+}
+
+.trace-word {
+  font-size: clamp(56px, 13vmin, 160px);
+  font-weight: bold;
+  color: #5b3b1e;
+  line-height: 1.05;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.trace-right {
+  flex: 1 1 auto;
+  min-width: 0;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: clamp(8px, 1.6vmin, 18px);
+}
+
+.trace-head {
+  display: flex;
+  align-items: baseline;
+  gap: clamp(8px, 1.6vmin, 16px);
+  flex-wrap: wrap;
+  flex: 0 0 auto;
+}
+
+.trace-title {
+  font-size: clamp(22px, 2.8vmin, 38px);
+  font-weight: bold;
+  color: #4a4a6a;
+}
+
+.trace-sub {
+  font-size: clamp(22px, 2.8vmin, 40px);
+  color: #b09bc4;
+}
+
+.trace-tools {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: clamp(8px, 1.4vmin, 16px);
+}
+
+/* 펜 굵기 선택 */
+.brush-select {
+  display: flex;
+  align-items: center;
+  gap: clamp(4px, 0.8vmin, 8px);
+  padding: clamp(3px, 0.6vmin, 6px);
+  background: #f3eefb;
+  border-radius: 16px;
+}
+
+.brush-btn {
+  width: clamp(34px, 5vmin, 46px);
+  height: clamp(34px, 5vmin, 46px);
+  border: none;
+  border-radius: 12px;
+  background: transparent;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.12s ease;
+}
+
+.brush-btn.active { background: #fff; box-shadow: 0 2px 0 rgba(0,0,0,0.06); }
+
+.brush-dot {
+  display: block;
+  border-radius: 50%;
+  background: #6b4ea0;
+}
+.brush-dot.s { width: 5px;  height: 5px; }
+.brush-dot.m { width: 8px;  height: 8px; }
+.brush-dot.l { width: 12px; height: 12px; }
+
+.trace-clear {
+  font-family: inherit;
+  font-size: clamp(16px, 2vmin, 26px);
+  padding: clamp(6px, 1vmin, 12px) clamp(14px, 2vmin, 24px);
+  border: none;
+  border-radius: 18px;
+  background: var(--yellow);
+  color: #8a6d00;
+  box-shadow: 0 4px 0 #e6c200;
+  cursor: pointer;
+}
+.trace-clear:active { transform: translateY(3px); box-shadow: 0 1px 0 #e6c200; }
+
+.trace-grid {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: grid;
+  gap: clamp(8px, 1.6vmin, 18px);
+  grid-auto-rows: 1fr;
+}
+
+.trace-cell {
+  position: relative;
+  overflow: hidden;
+  border: 3px solid #efe4d3;
+  border-radius: clamp(14px, 2.2vmin, 22px);
+  background: #fff;
+  min-height: 0;
+}
+
+.trace-cell .guide {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: clamp(70px, 24vmin, 240px);
+  line-height: 1;
+  color: #dcdcdc;
+  pointer-events: none;
+  user-select: none;
+  /* Jua 폰트 글리프가 em 박스 안에서 살짝 위에 놓여, 아래로 미세 보정 */
+  transform: translateY(0.08em);
+}
+
+.trace-cell canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  touch-action: none;
+  cursor: crosshair;
+}
+
 /* ---------- 메시지 ---------- */
 .message {
   font-size: clamp(40px, 4.6vmin, 72px);
@@ -588,4 +747,15 @@ main {
 
   .nav-btn { font-size: 26px; padding: 12px 28px; }
   .controls { gap: 14px; }
+
+  /* 따라쓰기: 세로 좁은 화면에선 위아래로 배치 */
+  .trace { flex-direction: column; gap: 10px; }
+  .trace-left {
+    flex: 0 0 auto;
+    flex-direction: row;
+    justify-content: center;
+    gap: 18px;
+  }
+  .trace-emoji { font-size: 64px; }
+  .trace-word { font-size: 56px; }
 }

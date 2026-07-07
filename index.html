@@ -32,6 +32,7 @@
       <button class="tab" data-tab="w2">그림만</button>
       <button class="tab" data-tab="w3">글자만</button>
       <button class="tab" data-tab="match">선긋기</button>
+      <button class="tab" data-tab="trace">따라쓰기</button>
     </nav>
 
     <div class="step-select-wrap">
@@ -58,6 +59,27 @@
         <div class="match-col" id="matchLeft"></div>
         <div class="match-col" id="matchRight"></div>
         <svg class="match-svg" id="matchSvg"></svg>
+      </div>
+    </div>
+
+    <div class="trace" id="trace" hidden>
+      <div class="trace-left">
+        <div class="trace-emoji" id="traceEmoji"></div>
+        <div class="trace-word" id="traceWord"></div>
+      </div>
+      <div class="trace-right">
+        <div class="trace-head">
+          <span class="trace-sub">단어를 읽으며 따라 써보세요 ✏️</span>
+          <div class="trace-tools">
+            <div class="brush-select" id="brushSelect" role="group" aria-label="펜 굵기">
+              <button type="button" class="brush-btn" data-brush="0.012" aria-label="가장 가는 펜"><span class="brush-dot s"></span></button>
+              <button type="button" class="brush-btn" data-brush="0.02" aria-label="가는 펜"><span class="brush-dot m"></span></button>
+              <button type="button" class="brush-btn active" data-brush="0.03" aria-label="보통 펜"><span class="brush-dot l"></span></button>
+            </div>
+            <button type="button" class="trace-clear" id="traceClear">지우기 🧽</button>
+          </div>
+        </div>
+        <div class="trace-grid" id="traceGrid"></div>
       </div>
     </div>
 

@@ -1,6 +1,6 @@
 // ---------- 상태 ----------
 let step = 1;           // 현재 단계 (STEPS.id)
-let gameType = "word";  // "word": 단어 맞추기, "match": 선긋기
+let gameType = "word";  // "word": 단어 맞추기, "match": 선긋기, "trace": 따라쓰기
 let level = 1;          // (단어 맞추기) 1: 그림+글자, 2: 그림만, 3: 글자만
 let current = null;     // 현재 문제 { target, options, level, step }
 let locked = false;     // 정답 맞춘 뒤 잠금
@@ -30,6 +30,21 @@ const $matchHint = document.getElementById("matchHint");
 
 const MATCH_HINT_DEFAULT = "그림과 글자를 선으로 이어요 ✏️";
 let matchState = null;   // 선긋기 게임 상태
+
+const $trace = document.getElementById("trace");
+const $traceEmoji = document.getElementById("traceEmoji");
+const $traceWord = document.getElementById("traceWord");
+const $traceGrid = document.getElementById("traceGrid");
+const $traceClear = document.getElementById("traceClear");
+const $brushSelect = document.getElementById("brushSelect");
+
+let traceWords = [];     // 따라쓰기: 현재 단계 단어들
+let traceIndex = 0;      // 현재 보고 있는 단어 위치
+let traceDrawing = false;
+let traceBrush = 0.03;   // 펜 굵기 = 칸 너비 대비 비율
+
+const TRACE_GUIDE_ROWS = 2;  // 흐린 가이드 글자 줄 수
+const TRACE_EMPTY_ROWS = 1;  // 빈칸(혼자 쓰기) 줄 수
 
 // ---------- 단계 ----------
 function getWords() {
@@ -304,9 +319,10 @@ function nextQuestion() {
   }
 }
 
-// 이전 버튼 활성/비활성 표시
+// 이전 버튼 활성/비활성 표시 (단어 맞추기)
 function updateNav() {
   $prevBtn.disabled = historyIndex <= 0;
+  $nextBtn.disabled = false;
 }
 
 // 단계 드롭다운 동기화 (라벨 + 선택 표시)
@@ -323,7 +339,9 @@ function syncStepSelect() {
 
 // 현재 상태(게임 종류/난이도)에 맞는 탭 하이라이트
 function currentTab() {
-  return gameType === "match" ? "match" : "w" + level;
+  if (gameType === "match") return "match";
+  if (gameType === "trace") return "trace";
+  return "w" + level;
 }
 function syncTabs() {
   const active = currentTab();
@@ -442,10 +460,11 @@ function celebrate() {
 
 // 현재 게임 종류에 맞게 화면 전환
 function updateModeView() {
-  const isMatch = gameType === "match";
-  $play.hidden = isMatch;
-  $footer.hidden = isMatch;
-  $match.hidden = !isMatch;
+  $play.hidden = gameType !== "word";
+  $match.hidden = gameType !== "match";
+  $trace.hidden = gameType !== "trace";
+  // 선긋기는 하단 버튼 숨김, 단어 맞추기·따라쓰기는 이전/다음 사용
+  $footer.hidden = gameType === "match";
 }
 
 // 새 라운드 시작 / 다시 시작
@@ -661,11 +680,172 @@ window.addEventListener("pointermove", onMatchMove);
 window.addEventListener("pointerup", onMatchUp);
 window.addEventListener("pointercancel", onMatchCancel);
 
+// ============================================================
+//  따라쓰기 모드 (trace)
+// ============================================================
+
+// 따라쓰기 시작: 현재 단계 단어를 순서대로, 첫 단어부터
+function startTrace() {
+  traceWords = getWords();
+  traceIndex = 0;
+  showTrace();
+}
+
+function showTrace() {
+  if (!traceWords.length) return;
+  const w = traceWords[traceIndex];
+
+  $traceEmoji.textContent = w.emoji;
+  $traceWord.textContent = w.word;
+  svgEmoji($trace);
+
+  // 단어를 누르면 소리 다시 듣기
+  $traceEmoji.onclick = () => speak(w.word);
+  $traceWord.onclick = () => speak(w.word);
+
+  // 글자 수만큼 열, (가이드 줄 + 빈 줄) 만큼 행
+  const chars = [...w.word];
+  $traceGrid.style.gridTemplateColumns = `repeat(${chars.length}, 1fr)`;
+
+  const rows = TRACE_GUIDE_ROWS + TRACE_EMPTY_ROWS;
+  let html = "";
+  for (let r = 0; r < rows; r++) {
+    for (let c = 0; c < chars.length; c++) {
+      const guide = r < TRACE_GUIDE_ROWS ? `<span class="guide">${chars[c]}</span>` : "";
+      html += `<div class="trace-cell">${guide}<canvas></canvas></div>`;
+    }
+  }
+  $traceGrid.innerHTML = html;
+
+  requestAnimationFrame(setupAllTraceCanvases);
+  updateTraceNav();
+  speak(w.word);
+}
+
+// 각 칸 캔버스 크기 설정 + 그리기 이벤트 연결
+function setupAllTraceCanvases() {
+  $traceGrid.querySelectorAll("canvas").forEach(setupTraceCanvas);
+  fitTraceGuides();
+}
+
+// 가이드 글씨를 칸 크기에 꽉 차게 맞춤 (작은 화면에서도 크게)
+function fitTraceGuides() {
+  $traceGrid.querySelectorAll(".trace-cell").forEach((cell) => {
+    const guide = cell.querySelector(".guide");
+    if (!guide) return;
+    const r = cell.getBoundingClientRect();
+    if (!r.width || !r.height) return;
+    // 칸의 짧은 변에 맞춰 글자 크기 결정 (여백 살짝)
+    guide.style.fontSize = Math.floor(Math.min(r.width, r.height) * 0.86) + "px";
+  });
+}
+
+function setupTraceCanvas(canvas) {
+  const rect = canvas.getBoundingClientRect();
+  if (rect.width === 0 || rect.height === 0) return;
+  const dpr = window.devicePixelRatio || 1;
+  canvas.width = Math.round(rect.width * dpr);
+  canvas.height = Math.round(rect.height * dpr);
+  const ctx = canvas.getContext("2d");
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  ctx.lineCap = "round";
+  ctx.lineJoin = "round";
+  ctx.lineWidth = Math.max(1.5, rect.width * traceBrush);
+  ctx.strokeStyle = "#6b4ea0";
+  canvas._ctx = ctx;
+  canvas._w = rect.width;
+
+  if (!canvas._bound) {
+    canvas.addEventListener("pointerdown", onTraceDown);
+    canvas.addEventListener("pointermove", onTraceMove);
+    canvas.addEventListener("pointerup", onTraceUp);
+    canvas.addEventListener("pointercancel", onTraceUp);
+    canvas._bound = true;
+  }
+}
+
+function traceXY(canvas, e) {
+  const r = canvas.getBoundingClientRect();
+  return { x: e.clientX - r.left, y: e.clientY - r.top };
+}
+
+function onTraceDown(e) {
+  const canvas = e.currentTarget;
+  if (!canvas._ctx) return;
+  e.preventDefault();
+  getAudioCtx();
+  traceDrawing = true;
+  try { canvas.setPointerCapture(e.pointerId); } catch (_) {}
+  const p = traceXY(canvas, e);
+  const ctx = canvas._ctx;
+  ctx.beginPath();
+  ctx.moveTo(p.x, p.y);
+  // 점 하나라도 찍히도록
+  ctx.lineTo(p.x + 0.01, p.y + 0.01);
+  ctx.stroke();
+}
+
+function onTraceMove(e) {
+  if (!traceDrawing) return;
+  const canvas = e.currentTarget;
+  if (!canvas._ctx) return;
+  e.preventDefault();
+  const p = traceXY(canvas, e);
+  const ctx = canvas._ctx;
+  ctx.lineTo(p.x, p.y);
+  ctx.stroke();
+}
+
+function onTraceUp(e) {
+  traceDrawing = false;
+}
+
+function clearTrace() {
+  $traceGrid.querySelectorAll("canvas").forEach((c) => {
+    if (c._ctx) c._ctx.clearRect(0, 0, c.width, c.height);
+  });
+}
+
+// 펜 굵기 변경 (그린 내용은 유지, 앞으로 그릴 선 굵기만 바꿈)
+function setTraceBrush(factor) {
+  traceBrush = factor;
+  $traceGrid.querySelectorAll("canvas").forEach((c) => {
+    if (c._ctx) c._ctx.lineWidth = Math.max(1.5, (c._w || 100) * traceBrush);
+  });
+  $brushSelect.querySelectorAll(".brush-btn").forEach((b) => {
+    b.classList.toggle("active", Number(b.dataset.brush) === traceBrush);
+  });
+}
+
+$brushSelect.addEventListener("click", (e) => {
+  const btn = e.target.closest(".brush-btn");
+  if (!btn) return;
+  setTraceBrush(Number(btn.dataset.brush));
+});
+
+function tracePrev() {
+  if (traceIndex <= 0) return;
+  traceIndex -= 1;
+  showTrace();
+}
+function traceNext() {
+  if (traceIndex >= traceWords.length - 1) return;
+  traceIndex += 1;
+  showTrace();
+}
+function updateTraceNav() {
+  $prevBtn.disabled = traceIndex <= 0;
+  $nextBtn.disabled = traceIndex >= traceWords.length - 1;
+}
+
+$traceClear.addEventListener("click", clearTrace);
+
 // 현재 게임 종류에 맞는 새 게임 시작
 function startCurrentGame() {
   resetGameState();
   updateModeView();
   if (gameType === "match") startMatchRound();
+  else if (gameType === "trace") startTrace();
   else newQuestion();
 }
 
@@ -699,6 +879,8 @@ $tabs.addEventListener("click", (e) => {
   const tab = btn.dataset.tab;
   if (tab === "match") {
     gameType = "match";
+  } else if (tab === "trace") {
+    gameType = "trace";
   } else {
     gameType = "word";
     level = Number(tab.slice(1)); // "w1" -> 1
@@ -707,8 +889,14 @@ $tabs.addEventListener("click", (e) => {
   startCurrentGame();
 });
 
-$nextBtn.addEventListener("click", nextQuestion);
-$prevBtn.addEventListener("click", prevQuestion);
+$nextBtn.addEventListener("click", () => {
+  if (gameType === "trace") traceNext();
+  else nextQuestion();
+});
+$prevBtn.addEventListener("click", () => {
+  if (gameType === "trace") tracePrev();
+  else prevQuestion();
+});
 
 // 화면 크기/방향이 바뀌면 글자 크기 다시 맞춤
 let resizeTimer = null;
@@ -717,6 +905,7 @@ window.addEventListener("resize", () => {
   resizeTimer = setTimeout(() => {
     fitAll();
     redrawMatchLines();
+    if (gameType === "trace") setupAllTraceCanvases();
   }, 120);
 });
 
@@ -730,4 +919,5 @@ initStepSelect();
 syncTabs();
 updateModeView();
 if (gameType === "match") startMatchRound();
+else if (gameType === "trace") startTrace();
 else newQuestion();
