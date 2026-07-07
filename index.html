@@ -5,6 +5,15 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
   <title>한글 단어 맞추기</title>
 
+  <!-- PWA: 홈 화면 추가 · 오프라인 실행 -->
+  <link rel="manifest" href="manifest.webmanifest" />
+  <meta name="theme-color" content="#ff9ec9" />
+  <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png" />
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <meta name="apple-mobile-web-app-title" content="한글놀이" />
+
   <!-- 귀여운 한글 폰트 -->
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -94,5 +103,14 @@
       </div>
     </div>
   </main>
+
+  <!-- PWA 서비스워커 등록 (오프라인 캐시) -->
+  <script>
+    if ("serviceWorker" in navigator) {
+      window.addEventListener("load", () => {
+        navigator.serviceWorker.register("sw.js").catch(() => {});
+      });
+    }
+  </script>
 </body>
 </html>
