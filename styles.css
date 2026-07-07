@@ -36,8 +36,6 @@ img.emoji {
   display: inline-block;
   -webkit-user-drag: none;
   pointer-events: none;
-  /* 흰 배경 사진(이불 등)이 흰 카드에서 묻히지 않도록 은은한 그림자 */
-  filter: drop-shadow(0 2px 3px rgba(0, 0, 0, 0.18));
 }
 
 html, body {
