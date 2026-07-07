@@ -37,11 +37,14 @@ const $traceWord = document.getElementById("traceWord");
 const $traceGrid = document.getElementById("traceGrid");
 const $traceClear = document.getElementById("traceClear");
 const $brushSelect = document.getElementById("brushSelect");
+const $toolSelect = document.getElementById("toolSelect");
 
 let traceWords = [];     // 따라쓰기: 현재 단계 단어들
 let traceIndex = 0;      // 현재 보고 있는 단어 위치
 let traceDrawing = false;
 let traceBrush = 0.03;   // 펜 굵기 = 칸 너비 대비 비율
+let traceTool = "pen";   // "pen": 그리기, "eraser": 지우개
+const TRACE_ERASER = 0.14; // 지우개 굵기 = 칸 너비 대비 비율
 
 const TRACE_GUIDE_ROWS = 2;  // 흐린 가이드 글자 줄 수
 const TRACE_EMPTY_ROWS = 1;  // 빈칸(혼자 쓰기) 줄 수
@@ -93,6 +96,13 @@ function shuffle(arr) {
     [a[i], a[j]] = [a[j], a[i]];
   }
   return a;
+}
+
+// 단어의 그림 조각 HTML: 커스텀 이미지(img)가 있으면 <img>, 없으면 이모지
+function pieceHTML(w) {
+  return w.img
+    ? `<img class="word-img" src="${w.img}" alt="${w.word}" draggable="false">`
+    : w.emoji;
 }
 
 // 이모지를 SVG 이미지로 변환 (Twemoji) — 기기와 무관하게 동일하게 표시
@@ -357,13 +367,13 @@ function renderQuestion() {
   if (level === 1) {
     // 그림 + 글자 함께
     html = `
-      <div class="q-emoji">${target.emoji}</div>
+      <div class="q-emoji">${pieceHTML(target)}</div>
       <div class="q-word">${target.word}</div>
       <div class="q-hint">같은 단어 카드를 찾아요</div>`;
   } else if (level === 2) {
     // 그림만 보여주기
     html = `
-      <div class="q-emoji">${target.emoji}</div>
+      <div class="q-emoji">${pieceHTML(target)}</div>
       <div class="q-hint">이 그림은 어떤 단어일까요?</div>`;
   } else {
     // 글자만 보여주기
@@ -390,7 +400,7 @@ function renderCards() {
 
     if (level === 3) {
       // 글자만 모드: 보기 카드는 그림(이모지)
-      btn.innerHTML = `<span class="c-emoji">${opt.emoji}</span>`;
+      btn.innerHTML = `<span class="c-emoji">${pieceHTML(opt)}</span>`;
     } else {
       // 그림+글자 / 그림만 모드: 보기 카드는 단어(글자)
       btn.innerHTML = `<span class="c-word">${opt.word}</span>`;
@@ -496,7 +506,7 @@ function startMatchRound() {
 
 function matchItemHTML(side, w, showEmoji) {
   const content = showEmoji
-    ? `<span class="m-emoji">${w.emoji}</span>`
+    ? `<span class="m-emoji">${pieceHTML(w)}</span>`
     : `<span class="m-word">${w.word}</span>`;
   return `<div class="match-item" data-side="${side}" data-word="${w.word}">
       <div class="match-card">${content}</div>
@@ -695,7 +705,7 @@ function showTrace() {
   if (!traceWords.length) return;
   const w = traceWords[traceIndex];
 
-  $traceEmoji.textContent = w.emoji;
+  $traceEmoji.innerHTML = pieceHTML(w);
   $traceWord.textContent = w.word;
   svgEmoji($trace);
 
@@ -769,6 +779,17 @@ function traceXY(canvas, e) {
   return { x: e.clientX - r.left, y: e.clientY - r.top };
 }
 
+// 현재 도구(펜/지우개)에 맞게 캔버스 그리기 설정
+function applyTool(ctx, w) {
+  if (traceTool === "eraser") {
+    ctx.globalCompositeOperation = "destination-out";
+    ctx.lineWidth = Math.max(14, w * TRACE_ERASER);
+  } else {
+    ctx.globalCompositeOperation = "source-over";
+    ctx.lineWidth = Math.max(1.5, w * traceBrush);
+  }
+}
+
 function onTraceDown(e) {
   const canvas = e.currentTarget;
   if (!canvas._ctx) return;
@@ -778,6 +799,7 @@ function onTraceDown(e) {
   try { canvas.setPointerCapture(e.pointerId); } catch (_) {}
   const p = traceXY(canvas, e);
   const ctx = canvas._ctx;
+  applyTool(ctx, canvas._w || 100);
   ctx.beginPath();
   ctx.moveTo(p.x, p.y);
   // 점 하나라도 찍히도록
@@ -821,6 +843,18 @@ $brushSelect.addEventListener("click", (e) => {
   const btn = e.target.closest(".brush-btn");
   if (!btn) return;
   setTraceBrush(Number(btn.dataset.brush));
+});
+
+// 도구 선택 (펜 / 지우개)
+$toolSelect.addEventListener("click", (e) => {
+  const btn = e.target.closest(".tool-btn");
+  if (!btn) return;
+  traceTool = btn.dataset.tool;
+  $toolSelect.querySelectorAll(".tool-btn").forEach((b) => {
+    b.classList.toggle("active", b.dataset.tool === traceTool);
+  });
+  // 지우개일 땐 굵기 선택 비활성 느낌으로
+  $brushSelect.classList.toggle("dim", traceTool === "eraser");
 });
 
 function tracePrev() {

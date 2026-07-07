@@ -76,7 +76,11 @@
               <button type="button" class="brush-btn" data-brush="0.02" aria-label="가는 펜"><span class="brush-dot m"></span></button>
               <button type="button" class="brush-btn active" data-brush="0.03" aria-label="보통 펜"><span class="brush-dot l"></span></button>
             </div>
-            <button type="button" class="trace-clear" id="traceClear">지우기 🧽</button>
+            <div class="tool-select" id="toolSelect" role="group" aria-label="도구 선택">
+              <button type="button" class="tool-btn active" data-tool="pen">펜</button>
+              <button type="button" class="tool-btn" data-tool="eraser">지우개</button>
+            </div>
+            <button type="button" class="trace-clear" id="traceClear">전체 지우기</button>
           </div>
         </div>
         <div class="trace-grid" id="traceGrid"></div>

@@ -26,6 +26,20 @@ img.emoji {
   pointer-events: none;
 }
 
+/* 커스텀 단어 이미지(사진): 이모지처럼 글자 크기(em)에 맞춰 표시 */
+.word-img {
+  height: 1em;
+  width: auto;
+  max-width: 100%;
+  object-fit: contain;
+  vertical-align: -0.12em;
+  display: inline-block;
+  -webkit-user-drag: none;
+  pointer-events: none;
+  /* 흰 배경 사진(이불 등)이 흰 카드에서 묻히지 않도록 은은한 그림자 */
+  filter: drop-shadow(0 2px 3px rgba(0, 0, 0, 0.18));
+}
+
 html, body {
   margin: 0;
   padding: 0;
@@ -539,7 +553,9 @@ main {
   padding: clamp(3px, 0.6vmin, 6px);
   background: #f3eefb;
   border-radius: 16px;
+  transition: opacity 0.15s ease;
 }
+.brush-select.dim { opacity: 0.4; }
 
 .brush-btn {
   width: clamp(34px, 5vmin, 46px);
@@ -565,6 +581,36 @@ main {
 .brush-dot.m { width: 8px;  height: 8px; }
 .brush-dot.l { width: 12px; height: 12px; }
 
+/* 도구 선택 (펜 / 지우개) */
+.tool-select {
+  display: flex;
+  align-items: center;
+  gap: clamp(4px, 0.8vmin, 8px);
+  padding: clamp(3px, 0.6vmin, 6px);
+  background: #f3eefb;
+  border-radius: 16px;
+}
+
+.tool-btn {
+  font-family: inherit;
+  font-size: clamp(15px, 1.9vmin, 24px);
+  padding: clamp(5px, 0.9vmin, 10px) clamp(10px, 1.6vmin, 18px);
+  border: none;
+  border-radius: 12px;
+  background: transparent;
+  color: #9a7bb5;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.12s ease, color 0.12s ease;
+}
+
+.tool-btn.active {
+  background: #fff;
+  color: #6b4ea0;
+  font-weight: bold;
+  box-shadow: 0 2px 0 rgba(0, 0, 0, 0.06);
+}
+
 .trace-clear {
   font-family: inherit;
   font-size: clamp(16px, 2vmin, 26px);
@@ -575,6 +621,7 @@ main {
   color: #8a6d00;
   box-shadow: 0 4px 0 #e6c200;
   cursor: pointer;
+  white-space: nowrap;
 }
 .trace-clear:active { transform: translateY(3px); box-shadow: 0 1px 0 #e6c200; }
 
