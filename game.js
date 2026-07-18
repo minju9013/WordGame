@@ -385,9 +385,8 @@ function renderQuestion() {
   $question.innerHTML = html;
   svgEmoji($question);
 
-  // 문제를 누르면 단어를 읽어줌 (글자만 모드에선 자동으로 한 번 읽어줌)
+  // 문제를 누르면 단어를 읽어줌 (자동 읽기 없음 — 선택/클릭 시에만)
   $question.onclick = () => speak(target.word);
-  if (level === 3) speak(target.word);
 }
 
 function renderCards() {
