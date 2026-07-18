@@ -37,7 +37,31 @@ const STEPS = [
       { word: "친구", emoji: "👫" },
       { word: "버튼", emoji: "🔘", img: "images/button.png" },
       { word: "버섯", emoji: "🍄" },
-      { word: "여행", emoji: "✈️" },
+      { word: "방귀", emoji: "💨" },
+    ],
+  },
+  {
+    id: 4,
+    label: "Step4",
+    words: [
+      { word: "여행",   emoji: "✈️" },
+      { word: "편지",   emoji: "✉️" },
+      { word: "생일",   emoji: "🎂" },
+      { word: "개구리", emoji: "🐸" },
+      { word: "무지개", emoji: "🌈" },
+      { word: "고양이", emoji: "🐱" },
+      { word: "호랑이", emoji: "🐯" },
+    ],
+  },
+  {
+    id: 5,
+    label: "Step5",
+    words: [
+      { word: "목도리",   emoji: "🧣" },
+      { word: "고등어",   emoji: "🐟" },
+      { word: "거북이",   emoji: "🐢" },
+      { word: "유치원",   emoji: "🏫" },
+      { word: "미끄럼틀", emoji: "🛝" },
     ],
   },
 ];
